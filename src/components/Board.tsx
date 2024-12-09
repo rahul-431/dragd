@@ -41,7 +41,7 @@ const Board = () => {
   };
 
   //Delete existing column
-  const handleDelete = (id: string) => {
+  const handleDeleteColumn = (id: string) => {
     const filteredColumns = columns.filter((col) => col.id !== id);
     setColumns(filteredColumns);
   };
@@ -85,6 +85,13 @@ const Board = () => {
     });
     setColumns(newColumns);
   };
+  const handleUpdateTask = (id: string, value: string) => {
+    const newTasks = tasks.map((task) => {
+      if (task.id !== id) return task;
+      return { ...task, content: value };
+    });
+    setTasks(newTasks);
+  };
 
   //creating new task
   const handleCreateTask = (id: string) => {
@@ -96,6 +103,12 @@ const Board = () => {
         columnId: id,
       },
     ]);
+  };
+
+  //Deleting task
+  const handleDeleteTask = (id: string) => {
+    const filteredTasks = tasks.filter((task) => task.id !== id);
+    setTasks(filteredTasks);
   };
   return (
     <DndContext
@@ -110,10 +123,12 @@ const Board = () => {
               {columns.map((col) => (
                 <Column
                   column={col}
-                  deleteColumn={handleDelete}
+                  deleteColumn={handleDeleteColumn}
                   updateTitle={handleUpdateTitle}
                   createTask={handleCreateTask}
                   tasks={tasks.filter((task) => task.columnId === col.id)}
+                  deleteTask={handleDeleteTask}
+                  updateTask={handleUpdateTask}
                 />
               ))}
             </SortableContext>
@@ -129,9 +144,11 @@ const Board = () => {
               {activeColumn && (
                 <Column
                   column={activeColumn}
-                  deleteColumn={handleDelete}
+                  deleteColumn={handleDeleteColumn}
                   updateTitle={handleUpdateTitle}
                   createTask={handleCreateTask}
+                  deleteTask={handleDeleteTask}
+                  updateTask={handleUpdateTask}
                 />
               )}
             </DragOverlay>,

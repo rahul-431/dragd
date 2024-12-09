@@ -1,12 +1,15 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
+import TaskCard from "./TaskCard";
 interface Props {
   column: Column;
   deleteColumn: (id: string) => void;
   updateTitle: (id: string, value: string) => void;
+  updateTask: (id: string, value: string) => void;
   createTask: (id: string) => void;
   tasks?: Task[];
+  deleteTask: (id: string) => void;
 }
 const Column = ({
   column,
@@ -14,9 +17,12 @@ const Column = ({
   updateTitle,
   createTask,
   tasks,
+  deleteTask,
+  updateTask,
 }: Props) => {
   const { id, title } = column;
   const [titleEditMode, setTitleEditMode] = useState(false);
+
   const {
     setNodeRef,
     attributes,
@@ -89,10 +95,11 @@ const Column = ({
       <div className="flex flex-col  gap-4 flex-grow p-4 ">
         {tasks &&
           tasks.map((task) => (
-            <div className="bg-bgColumn p-4 flex justify-between items-center rounded-md">
-              <p>{task.content}</p>
-              <button className="bg-bgMain p-2 rounded-md">Del</button>
-            </div>
+            <TaskCard
+              task={task}
+              updateTask={updateTask}
+              deleteTask={deleteTask}
+            />
           ))}
       </div>
       <div className="">
