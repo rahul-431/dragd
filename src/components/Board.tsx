@@ -4,21 +4,23 @@ import Column from "./Column";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { arraySwap, SortableContext } from "@dnd-kit/sortable";
+import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { IoMdAddCircleOutline } from "react-icons/io";
 import toast from "react-hot-toast";
+import TaskCard from "./TaskCard";
 const Board = () => {
   const [columns, setColumns] = useState<Column[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   useEffect(() => {
     const storedColumns = localStorage.getItem("columns");
     const storedTasks = localStorage.getItem("tasks");
@@ -29,6 +31,9 @@ const Board = () => {
     setTasks(oldTasks);
     setColumns(oldColumns);
   }, []);
+  const columnsId = useMemo(() => {
+    return columns.map((col) => col.id);
+  }, [columns]);
   //after sorting columns the delete function did not worked
   //to solve this issue we can use useSesors hook;
   const sensors = useSensors(
@@ -59,8 +64,11 @@ const Board = () => {
   //Delete existing column
   const handleDeleteColumn = (id: string) => {
     const filteredColumns = columns.filter((col) => col.id !== id);
+    const newTasks = tasks.filter((task) => task.columnId !== id);
+    localStorage.setItem("tasks", JSON.stringify(newTasks));
     localStorage.setItem("columns", JSON.stringify(filteredColumns));
     setColumns(filteredColumns);
+    setTasks(newTasks);
     toast.success("Column Deleted");
   };
 
@@ -71,34 +79,48 @@ const Board = () => {
       setActiveColumn(e.active.data.current.column);
       return;
     }
+    if (e.active.data.current?.type === "Task") {
+      setActiveTask(e.active.data.current.task);
+      return;
+    }
   };
 
   //called when placed to other position or dragged complete
   const handleOnDragEnd = (e: DragEndEvent) => {
+    // setActiveColumn(null);
+    // setActiveTask(null);
+
     //active means that column which is being dragged
     //and over means that column where it will be dropped
     const { active, over } = e;
     if (!over) return;
-    const activeColumnId = active.id;
-    const overColumnId = over.id;
-
-    //check active column and over column is same otherwise swap them
-    if (activeColumnId === overColumnId) return;
-    setColumns((columns) => {
-      const activeColumnIndex = columns.findIndex(
-        (col) => col.id === activeColumnId
-      );
-      const overColumnIndex = columns.findIndex(
-        (col) => col.id === overColumnId
-      );
-      const sortedColumns = arraySwap(
-        columns,
-        activeColumnIndex,
-        overColumnIndex
-      );
-      localStorage.setItem("columns", JSON.stringify(sortedColumns));
-      return sortedColumns;
-    });
+    const activeId = active.id;
+    const overId = over.id;
+    if (activeId === overId) return;
+    if (active.data.current?.type === "Task") {
+      setTasks((tasks) => {
+        const activeIndex = tasks.findIndex((t) => t.id === activeId);
+        const overIndex = tasks.findIndex((t) => t.id === overId);
+        const swapedTasks = arrayMove(tasks, activeIndex, overIndex);
+        localStorage.setItem("tasks", JSON.stringify(swapedTasks));
+        return swapedTasks;
+      });
+    }
+    if (active.data.current?.type === "Column") {
+      setColumns((columns) => {
+        const activeColumnIndex = columns.findIndex(
+          (col) => col.id === activeId
+        );
+        const overColumnIndex = columns.findIndex((col) => col.id === overId);
+        const sortedColumns = arrayMove(
+          columns,
+          activeColumnIndex,
+          overColumnIndex
+        );
+        localStorage.setItem("columns", JSON.stringify(sortedColumns));
+        return sortedColumns;
+      });
+    }
   };
 
   //updating column title
@@ -144,11 +166,53 @@ const Board = () => {
     setTasks(filteredTasks);
     toast.success("Task deleted");
   };
+
+  //drag and drop the task to different columsn
+  const handleDragOver = (e: DragOverEvent) => {
+    const { active, over } = e;
+    if (!over) return;
+    const activeId = active.id;
+    const overId = over.id;
+
+    //check active column and over column is same otherwise swap them
+    if (activeId === overId) return;
+
+    const isActiveTask = active.data.current?.type === "Task";
+    const isOverTask = over.data.current?.type === "Task";
+
+    if (!activeTask) return;
+    //dropping task over other columns
+    if (isActiveTask && isOverTask) {
+      setTasks((tasks) => {
+        const activeIndex = tasks.findIndex((t) => t.id === activeId);
+        const overIndex = tasks.findIndex((t) => t.id === overId);
+        tasks[activeIndex].columnId = tasks[overIndex].columnId;
+        const swapedTasks = arrayMove(tasks, activeIndex, overIndex);
+
+        localStorage.setItem("tasks", JSON.stringify(swapedTasks));
+        return swapedTasks;
+      });
+    }
+
+    //dropping task to same column
+    const isOverColumn = over.data.current?.type === "Column";
+    if (isOverColumn && isActiveTask) {
+      setTasks((tasks) => {
+        const activeIndex = tasks.findIndex((t) => t.id === activeId);
+        tasks[activeIndex].columnId = overId.toString();
+        const swapedTasks = arrayMove(tasks, activeIndex, activeIndex);
+
+        localStorage.setItem("tasks", JSON.stringify(swapedTasks));
+        return swapedTasks;
+      });
+    }
+  };
   return (
     <DndContext
       sensors={sensors}
       onDragStart={handleOnDragStart}
       onDragEnd={handleOnDragEnd}
+      onDragOver={handleDragOver}
     >
       <div className=" min-h-screen flex flex-col w-full items-center overflow-x-auto md:overflow-y-hidden overflow-y-auto ">
         <button
@@ -166,6 +230,7 @@ const Board = () => {
               <SortableContext items={columnsId}>
                 {columns.map((col) => (
                   <Column
+                    key={col.id}
                     column={col}
                     deleteColumn={handleDeleteColumn}
                     updateTitle={handleUpdateTitle}
@@ -186,6 +251,14 @@ const Board = () => {
                     deleteColumn={handleDeleteColumn}
                     updateTitle={handleUpdateTitle}
                     createTask={handleCreateTask}
+                    deleteTask={handleDeleteTask}
+                    tasks={tasks}
+                    updateTask={handleUpdateTask}
+                  />
+                )}
+                {activeTask && (
+                  <TaskCard
+                    task={activeTask}
                     deleteTask={handleDeleteTask}
                     updateTask={handleUpdateTask}
                   />

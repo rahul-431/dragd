@@ -1,6 +1,6 @@
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import TaskCard from "./TaskCard";
 import { HiMiniXMark, HiOutlineTrash } from "react-icons/hi2";
 import { MdOutlineModeEdit } from "react-icons/md";
@@ -11,7 +11,7 @@ interface Props {
   updateTitle: (id: string, value: string) => void;
   updateTask: (id: string, value: string) => void;
   createTask: (id: string) => void;
-  tasks?: Task[];
+  tasks: Task[];
   deleteTask: (id: string) => void;
 }
 const Column = ({
@@ -24,6 +24,8 @@ const Column = ({
   updateTask,
 }: Props) => {
   const { id, title } = column;
+  const tasksId = useMemo(() => tasks.map((task) => task.id), [tasks]);
+
   const [titleEditMode, setTitleEditMode] = useState(false);
 
   const {
@@ -41,6 +43,8 @@ const Column = ({
     },
     disabled: titleEditMode,
   });
+
+  //for smooth transition
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
@@ -106,14 +110,16 @@ const Column = ({
         </div>
       </div>
       <div className="flex flex-col  gap-4 flex-grow p-4 ">
-        {tasks &&
-          tasks.map((task) => (
+        <SortableContext items={tasksId}>
+          {tasks.map((task) => (
             <TaskCard
+              key={task.id}
               task={task}
               updateTask={updateTask}
               deleteTask={deleteTask}
             />
           ))}
+        </SortableContext>
       </div>
       <div>
         <button

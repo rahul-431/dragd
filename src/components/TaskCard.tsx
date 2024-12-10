@@ -1,3 +1,5 @@
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 import { HiMiniXMark, HiOutlineTrash } from "react-icons/hi2";
 import { MdOutlineModeEdit } from "react-icons/md";
@@ -8,8 +10,40 @@ interface Props {
 }
 const TaskCard = ({ task, updateTask, deleteTask }: Props) => {
   const [taskEditMode, setTaskEditMode] = useState(false);
+  const {
+    setNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: task.id,
+    data: {
+      type: "Task",
+      task,
+    },
+    disabled: taskEditMode,
+  });
+  const style = {
+    transition,
+    transform: CSS.Transform.toString(transform),
+  };
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="bg-bgColumn h[50px] flex w-full items-center rounded-md justify-between border border-rose-500 opacity-40"
+      ></div>
+    );
+  }
   return (
     <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       className={`bg-bgColumn p-2 flex w-full items-center rounded-md ${
         taskEditMode ? "" : "justify-between"
       }`}
