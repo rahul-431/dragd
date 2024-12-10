@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { v4 as uuid } from "uuid";
 import Column from "./Column";
 import {
