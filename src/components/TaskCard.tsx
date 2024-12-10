@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { HiMiniXMark, HiOutlineTrash } from "react-icons/hi2";
+import { MdOutlineModeEdit } from "react-icons/md";
 interface Props {
   task: Task;
   updateTask: (id: string, value: string) => void;
@@ -25,7 +27,7 @@ const TaskCard = ({ task, updateTask, deleteTask }: Props) => {
             value={task.content}
             onChange={(e) => updateTask(task.id, e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.shiftKey) {
+              if (e.key === "Enter") {
                 setTaskEditMode(false);
               }
             }}
@@ -33,12 +35,20 @@ const TaskCard = ({ task, updateTask, deleteTask }: Props) => {
         )}
       </p>
       {!taskEditMode && (
-        <button
-          className="bg-bgMain p-2 rounded-md"
-          onClick={() => deleteTask(task.id)}
-        >
-          Del
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="bg-bgMain p-2 rounded-md hover:text-rose-500 text-lg"
+            onClick={() => setTaskEditMode(!taskEditMode)}
+          >
+            {taskEditMode ? <HiMiniXMark /> : <MdOutlineModeEdit />}
+          </button>
+          <button
+            className="bg-bgMain p-2 rounded-md text-md hover:text-rose-500"
+            onClick={() => deleteTask(task.id)}
+          >
+            <HiOutlineTrash />
+          </button>
+        </div>
       )}
     </div>
   );

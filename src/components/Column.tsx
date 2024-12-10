@@ -2,6 +2,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 import TaskCard from "./TaskCard";
+import { HiMiniXMark, HiOutlineTrash } from "react-icons/hi2";
+import { MdOutlineModeEdit } from "react-icons/md";
+import { IoMdAddCircleOutline } from "react-icons/io";
 interface Props {
   column: Column;
   deleteColumn: (id: string) => void;
@@ -63,11 +66,13 @@ const Column = ({
         {...listeners}
         className="bg-bgColumn p-2 flex justify-between items-center rounded-lg"
       >
-        <p className="flex gap-2 items-center">
-          <span className="bg-bgMain px-4 p-2 rounded-lg">
-            {tasks?.length || 0}
-          </span>
-          <div>
+        <div className="flex gap-2 items-center">
+          {!titleEditMode && (
+            <div className="bg-bgMain px-4 p-2 rounded-lg ">
+              {tasks?.length || 0}
+            </div>
+          )}
+          <div className="px-4">
             {!titleEditMode ? (
               <span>{title}</span>
             ) : (
@@ -84,13 +89,21 @@ const Column = ({
               />
             )}
           </div>
-        </p>
-        <button
-          className="bg-bgMain p-2 rounded-md"
-          onClick={() => deleteColumn(id)}
-        >
-          Del
-        </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="bg-bgMain p-2 rounded-md hover:text-rose-500 text-lg"
+            onClick={() => setTitleEditMode(!titleEditMode)}
+          >
+            {titleEditMode ? <HiMiniXMark /> : <MdOutlineModeEdit />}
+          </button>
+          <button
+            className="bg-bgMain p-2 rounded-md hover:text-rose-500 text-lg"
+            onClick={() => deleteColumn(id)}
+          >
+            <HiOutlineTrash />
+          </button>
+        </div>
       </div>
       <div className="flex flex-col  gap-4 flex-grow p-4 ">
         {tasks &&
@@ -102,12 +115,15 @@ const Column = ({
             />
           ))}
       </div>
-      <div className="">
+      <div>
         <button
           onClick={() => createTask(id)}
           className="rounded-md flex gap-2 items-center p-4 bg-bgColumn w-full"
         >
-          Add Task
+          <span className="text-xl">
+            <IoMdAddCircleOutline />
+          </span>
+          <span>Add Task</span>
         </button>
       </div>
     </div>
