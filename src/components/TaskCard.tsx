@@ -44,7 +44,7 @@ const TaskCard = ({ task, updateTask, deleteTask }: Props) => {
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-bgColumn p-2 flex w-full items-center rounded-md ${
+      className={`cursor-pointer bg-bgColumn p-2 flex w-full items-center rounded-md ${
         taskEditMode ? "" : "justify-between"
       }`}
       onDoubleClick={() => setTaskEditMode(true)}

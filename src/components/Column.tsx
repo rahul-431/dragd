@@ -62,7 +62,7 @@ const Column = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-bgMain w-[350px] h-[500px] max-h-[500px] rounded-lg flex flex-col"
+      className="cursor-pointer bg-bgMain w-[350px] h-[500px] max-h-[500px] rounded-lg flex flex-col"
     >
       <div
         onDoubleClick={() => setTitleEditMode(true)}

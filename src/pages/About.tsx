@@ -8,6 +8,7 @@ const About = () => {
           <li>Add multiple columns</li>
           <li>Sorting columns</li>
           <li>Delete and edit column</li>
+          <li>Searching column</li>
           <li>Add task inside each column</li>
           <li>Delete and edit task</li>
           <li>Sorting tasks</li>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { InputHTMLAttributes, useEffect, useMemo, useState } from "react";
 import { v4 as uuid } from "uuid";
 import Column from "./Column";
 import {
@@ -21,6 +21,9 @@ const Board = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [search, setSearch] = useState("");
+
+  //get data from local storage
   useEffect(() => {
     const storedColumns = localStorage.getItem("columns");
     const storedTasks = localStorage.getItem("tasks");
@@ -31,9 +34,30 @@ const Board = () => {
     setTasks(oldTasks);
     setColumns(oldColumns);
   }, []);
+
+  //set search result at initial loading
+  useEffect(() => {
+    setSearchResult(columns);
+  }, [columns]);
+  const [searchResult, setSearchResult] = useState<Column[]>(columns);
+
+  //searhing columns by title
+  useEffect(() => {
+    if (columns && columns.length > 0) {
+      const filteredColumns =
+        search !== ""
+          ? columns.filter((column) =>
+              column.title.toLowerCase().includes(search.toLowerCase())
+            )
+          : columns;
+      setSearchResult(filteredColumns);
+    }
+  }, [search]);
+
   const columnsId = useMemo(() => {
     return columns.map((col) => col.id);
   }, [columns]);
+
   //after sorting columns the delete function did not worked
   //to solve this issue we can use useSesors hook;
   const sensors = useSensors(
@@ -207,6 +231,7 @@ const Board = () => {
       });
     }
   };
+
   return (
     <DndContext
       sensors={sensors}
@@ -214,61 +239,72 @@ const Board = () => {
       onDragEnd={handleOnDragEnd}
       onDragOver={handleDragOver}
     >
-      <div className=" min-h-screen flex flex-col w-full items-center overflow-x-auto md:overflow-y-hidden overflow-y-auto ">
-        <button
-          onClick={addColumn}
-          className="cursor-pointer rounded-lg bg-bgMain border border-bgColumn px-4 py-2 ring-rose-500 hover:ring-2 text-white  m-5 flex gap-2 items-center text-center"
-        >
-          <span className="text-xl">
-            <IoMdAddCircleOutline />
-          </span>
-          <span>Add Column</span>
-        </button>
-        <div className="flex gap-5 py-5 md:p-0">
-          <div className="flex gap-5">
-            <div className="text-white flex md:flex-row flex-col gap-6">
-              <SortableContext items={columnsId}>
-                {columns.map((col) => (
-                  <Column
-                    key={col.id}
-                    column={col}
-                    deleteColumn={handleDeleteColumn}
-                    updateTitle={handleUpdateTitle}
-                    createTask={handleCreateTask}
-                    tasks={tasks.filter((task) => task.columnId === col.id)}
-                    deleteTask={handleDeleteTask}
-                    updateTask={handleUpdateTask}
-                  />
-                ))}
-              </SortableContext>
-            </div>
-
-            {createPortal(
-              <DragOverlay>
-                {activeColumn && (
-                  <Column
-                    column={activeColumn}
-                    deleteColumn={handleDeleteColumn}
-                    updateTitle={handleUpdateTitle}
-                    createTask={handleCreateTask}
-                    deleteTask={handleDeleteTask}
-                    tasks={tasks}
-                    updateTask={handleUpdateTask}
-                  />
-                )}
-                {activeTask && (
-                  <TaskCard
-                    task={activeTask}
-                    deleteTask={handleDeleteTask}
-                    updateTask={handleUpdateTask}
-                  />
-                )}
-              </DragOverlay>,
-              document.body
-            )}
-          </div>
+      <main className=" min-h-screen flex flex-col w-full md:px-10 px-3 ">
+        <div className="flex flex-col md:flex-row gap-4 mt-2 w-full py-5 justify-center">
+          <button
+            onClick={addColumn}
+            className="cursor-pointer rounded-lg bg-bgMain border border-bgColumn px-4 py-2 ring-rose-500 hover:ring-2 text-white flex gap-2 items-center text-center"
+          >
+            <span className="text-xl">
+              <IoMdAddCircleOutline />
+            </span>
+            <span>Add Column</span>
+          </button>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            type="text"
+            className="px-4 py-2 bg-transparent border border-white rounded-md"
+            placeholder="Search by column title"
+          />
         </div>
-      </div>
+        <section className=" overflow-x-auto md:overflow-y-hidden overflow-y-auto">
+          <div className="flex gap-5 py-5 md:p-0">
+            <div className="flex gap-5">
+              <div className="text-white flex md:flex-row flex-col gap-6">
+                <SortableContext items={columnsId}>
+                  {searchResult.map((col) => (
+                    <Column
+                      key={col.id}
+                      column={col}
+                      deleteColumn={handleDeleteColumn}
+                      updateTitle={handleUpdateTitle}
+                      createTask={handleCreateTask}
+                      tasks={tasks.filter((task) => task.columnId === col.id)}
+                      deleteTask={handleDeleteTask}
+                      updateTask={handleUpdateTask}
+                    />
+                  ))}
+                </SortableContext>
+              </div>
+
+              {createPortal(
+                <DragOverlay>
+                  {activeColumn && (
+                    <Column
+                      column={activeColumn}
+                      deleteColumn={handleDeleteColumn}
+                      updateTitle={handleUpdateTitle}
+                      createTask={handleCreateTask}
+                      deleteTask={handleDeleteTask}
+                      tasks={tasks}
+                      updateTask={handleUpdateTask}
+                    />
+                  )}
+                  {activeTask && (
+                    <TaskCard
+                      task={activeTask}
+                      deleteTask={handleDeleteTask}
+                      updateTask={handleUpdateTask}
+                    />
+                  )}
+                </DragOverlay>,
+                document.body
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
     </DndContext>
   );
 };
