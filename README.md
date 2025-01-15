@@ -37,5 +37,3 @@ Add subtask feature,
 Undo and redo feature,
 
 Time spent: 5 hour
-
-#Time spent:4.5h
